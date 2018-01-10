@@ -32,16 +32,16 @@ public:
  
   void setPinInterrupt(uint8_t pin, bool enable = true);
   uint8_t getPinInterrupt(uint8_t pin);
-  void setPortInterrupt(uint8_t port, uint8_t flags);
+  void setPortInterrupt(uint8_t port, uint8_t enable);
   uint8_t getPortInterrupt(uint8_t port);
-  void setIOInterrupt(IOPORTS flags);
+  void setIOInterrupt(IOPORTS io);
   IOPORTS getIOInterrupt();
   void clearInterrupt();
-  void setPinPolarity(uint8_t pin, uint8_t flag);
+  void setPinPolarity(uint8_t pin, uint8_t toggle);
   uint8_t getPinPolarity(uint8_t pin);
-  void setPortPolarity(uint8_t port, uint8_t flags);
+  void setPortPolarity(uint8_t port, uint8_t toggle);
   uint8_t getPortPolarity(uint8_t port);
-  void setIOPolarity(IOPORTS flags);
+  void setIOPolarity(IOPORTS io);
   IOPORTS getIOPolarity();
 
 private:
@@ -49,7 +49,7 @@ private:
   uint8_t getBit(uint8_t pin);
   void sendPortData(uint8_t reg, uint8_t port, uint8_t data);
   uint8_t retrievePortData(uint8_t reg, uint8_t port);
-  void sendIOData(uint8_t reg, IOPORTS data);
+  void sendIOData(uint8_t reg, IOPORTS io);
   IOPORTS retrieveIOData(uint8_t reg);
   uint8_t i2caddr;
 };
