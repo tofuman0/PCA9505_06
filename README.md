@@ -1,4 +1,4 @@
-# PCA9505_06
+# PCA9505 / PCA9506 Arduino Library
 Arduino library for the 40bit PCA9505/06 I2C IO Expander
  
 These chips use I2C to communicate, and have interupt, reset and output enable controls. A 3bit
