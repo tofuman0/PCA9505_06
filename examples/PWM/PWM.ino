@@ -22,8 +22,8 @@ PCA9505_06 GPIO;
 
 void setup() {
   GPIO.begin();   //  Default address 0x20
-  GPIO.ioMode(0xFF, 0xFF, 0xFF, 0xFF, 0xFF);            // Set all pins as outputs
-  GPIO.digitalIOWrite(0xFF, 0xFF, 0xFF, 0xFF, 0xFF);    // Set all pins HIGH
+  GPIO.ioMode((IOPORTS){0xFF, 0xFF, 0xFF, 0xFF, 0xFF});            // Set all pins as outputs
+  GPIO.digitalIOWrite((IOPORTS){0xFF, 0xFF, 0xFF, 0xFF, 0xFF});    // Set all pins HIGH
 }
 
 void loop() {

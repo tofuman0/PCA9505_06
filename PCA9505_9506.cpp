@@ -20,289 +20,198 @@ void PCA9505_06::begin(uint8_t addr) {
 
 	Wire.begin();
 	
-	setIOInterrupt(
+	setIOInterrupt((IOPORTS){
 		0xFF /* Port 0 */,
 		0xFF /* Port 1 */,
 		0xFF /* Port 2 */,
 		0xFF /* Port 3 */,
 		0xFF /* Port 4 */
-	);
+	});
 	
-	setPolarities(
+	setIOPolarity((IOPORTS){
 		0x00 /* Port 0 */,
 		0x00 /* Port 1 */,
 		0x00 /* Port 2 */,
 		0x00 /* Port 3 */,
 		0x00 /* Port 4 */
-	);
+	});
 }
 
 void PCA9505_06::begin(void) {
 	begin(PCA9505_BASE_ADDRESS);
 }
 
-uint8_t PCA9505_06::getPort(uint8_t p) {
-	return (p % 8) / 40;
+uint8_t PCA9505_06::getPort(uint8_t pin) {
+	return (pin % 8) / 40;
 }
 
-uint8_t PCA9505_06::getBit(uint8_t p) {
-	return p % 8;
+uint8_t PCA9505_06::getBit(uint8_t pin) {
+	return pin % 8;
 }
 
-void PCA9505_06::pinMode(uint8_t p, uint8_t d) {
-	uint8_t command = (PCA9505_IOC0 + getPort(p)) | PCA9505_AI_OFF;
-	uint8_t set = 0;
-	
+void PCA9505_06::sendPortData(uint8_t reg, uint8_t port, uint8_t data) {
 	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	set = Wire.read();
-	
-	bitWrite(set, getBit(p), d ? 0 : 1);
-
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(set);
+	Wire.write((reg + (port % 5)) | PCA9505_AI_OFF);
+	Wire.write(data);
 	Wire.endTransmission();
 }
 
-uint8_t PCA9505_06::getPinMode(uint8_t p) {
-	uint8_t command = (PCA9505_IOC0 + getPort(p)) | PCA9505_AI_OFF;
-	
+uint8_t PCA9505_06::retrievePortData(uint8_t reg, uint8_t port) {
 	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
+	Wire.write((reg + (port % 5)) | PCA9505_AI_OFF);
 	Wire.endTransmission();
 	
 	Wire.requestFrom(i2caddr, 1);
 	
-	return (Wire.read() & (1 << getBit(p))) ? INPUT : OUTPUT;
+	return Wire.read();
 }
 
-void PCA9505_06::portMode(uint8_t port, uint8_t d) {
-	uint8_t command = (PCA9505_IOC0 + (port % 5)) | PCA9505_AI_OFF;
+void PCA9505_06::sendIOData(uint8_t reg, IOPORTS data) {
 	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(d ? 0x00 : 0xFF);
+	Wire.write(reg | PCA9505_AI_ON);
+	Wire.write(data.port[0]);
+	Wire.write(data.port[1]);
+	Wire.write(data.port[2]);
+	Wire.write(data.port[3]);
+	Wire.write(data.port[4]);
 	Wire.endTransmission();
+}
+
+IOPORTS PCA9505_06::retrieveIOData(uint8_t reg) {
+	IOPORTS data = { 0 };
+	Wire.beginTransmission(i2caddr);
+	Wire.write(reg | PCA9505_AI_ON);
+	Wire.endTransmission();
+	
+	Wire.requestFrom(i2caddr, 5);
+	
+	data.port[0] = Wire.read();
+	data.port[1] = Wire.read();
+	data.port[2] = Wire.read();
+	data.port[3] = Wire.read();
+	data.port[4] = Wire.read();
+	return data;
+}
+
+void PCA9505_06::pinMode(uint8_t pin, uint8_t dir) {
+	uint8_t set = retrievePortData(PCA9505_IOC, getPort(pin));
+	bitWrite(set, getBit(pin), (dir ? 0 : 1));
+	sendPortData(PCA9505_IOC, getPort(pin), set);
+}
+
+uint8_t PCA9505_06::getPinMode(uint8_t pin) {
+	return (retrievePortData(PCA9505_IOC, getPort(pin)) & (1 << getBit(pin))) ? INPUT : OUTPUT;
+}
+
+void PCA9505_06::portMode(uint8_t port, uint8_t dir) {
+	sendPortData(PCA9505_IOC, port, (dir ? 0x00 : 0xFF));
 }
 
 uint8_t PCA9505_06::getPortMode(uint8_t port) {
-	uint8_t command = (PCA9505_IOC0 + (port % 5)) | PCA9505_AI_OFF;
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	
-	return Wire.read();
+	return retrievePortData(PCA9505_IOC, port);
 }
 
-void PCA9505_06::ioMode(uint8_t io0, uint8_t io1, uint8_t io2, uint8_t io3, uint8_t io4) {
-	uint8_t command = PCA9505_IOC0 | PCA9505_AI_ON;
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(~io0);
-	Wire.write(~io1);
-	Wire.write(~io2);
-	Wire.write(~io3);
-	Wire.write(~io4);
-	Wire.endTransmission();
+void PCA9505_06::ioMode(IOPORTS io) {
+	io.port[0] = ~io.port[0];
+	io.port[1] = ~io.port[1];
+	io.port[2] = ~io.port[2];
+	io.port[3] = ~io.port[3];
+	io.port[4] = ~io.port[4];
+	sendIOData(PCA9505_IOC, io);
 }
 
-uint64_t PCA9505_06::getIoMode() {
-	uint8_t command = PCA9505_IOC0 | PCA9505_AI_ON;
-	uint64_t result = 0;
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 5);
-	
-	result |=  Wire.read();
-	result = result << 8;
-	result |=  Wire.read();
-	result = result << 8;
-	result |=  Wire.read();
-	result = result << 8;
-	result |=  Wire.read();
-	result = result << 8;
-	result |=  Wire.read();
-	result = result << 8;
-	
-	return result;
+IOPORTS PCA9505_06::getIoMode() {
+	return retrieveIOData(PCA9505_IOC);
 }
 
-void PCA9505_06::digitalWrite(uint8_t p, uint8_t d) {
-	uint8_t command = (PCA9505_OP0 + getPort(p)) | PCA9505_AI_OFF;
+void PCA9505_06::digitalWrite(uint8_t pin, uint8_t dir) {
+	uint8_t set = retrievePortData(PCA9505_OP, getPort(pin));
+	bitWrite(set, getBit(pin), (dir ? HIGH : LOW));
+	sendPortData(PCA9505_OP, getPort(pin), set);
+}
+
+void PCA9505_06::digitalPortWrite(uint8_t port, uint8_t dir[8]) {
 	uint8_t set = 0;
 	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	set = Wire.read();
-	
-	bitWrite(set, getBit(p), d);
-
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(set);
-	Wire.endTransmission();
+	bitWrite(set, 0, (dir[0] ? HIGH : LOW));
+	bitWrite(set, 1, (dir[1] ? HIGH : LOW));
+	bitWrite(set, 2, (dir[2] ? HIGH : LOW));
+	bitWrite(set, 3, (dir[3] ? HIGH : LOW));
+	bitWrite(set, 4, (dir[4] ? HIGH : LOW));
+	bitWrite(set, 5, (dir[5] ? HIGH : LOW));
+	bitWrite(set, 6, (dir[6] ? HIGH : LOW));
+	bitWrite(set, 7, (dir[7] ? HIGH : LOW));
+	sendPortData(PCA9505_OP, port, set);
 }
 
-void PCA9505_06::digitalPortWrite(uint8_t p, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7) {
-	uint8_t command = (PCA9505_OP0 + getPort(p)) | PCA9505_AI_OFF;
-	uint8_t set = 0;
-	
-	bitWrite(set, 0, d0 & 0x01);
-	bitWrite(set, 1, d1 & 0x01);
-	bitWrite(set, 2, d2 & 0x01);
-	bitWrite(set, 3, d3 & 0x01);
-	bitWrite(set, 4, d4 & 0x01);
-	bitWrite(set, 5, d5 & 0x01);
-	bitWrite(set, 6, d6 & 0x01);
-	bitWrite(set, 7, d7 & 0x01);
-
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(set);
-	Wire.endTransmission();
+void PCA9505_06::digitalIOWrite(IOPORTS io) {
+	sendIOData(PCA9505_OP, io);
 }
 
-void PCA9505_06::digitalIOWrite(uint8_t p0, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4) {
-	uint8_t command = PCA9505_OP0 | PCA9505_AI_ON;
-
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(p0);
-	Wire.write(p1);
-	Wire.write(p2);
-	Wire.write(p3);
-	Wire.write(p4);
-	Wire.endTransmission();
+uint8_t PCA9505_06::digitalRead(uint8_t pin) {	
+	return (retrievePortData(PCA9505_IP, getPort(pin)) & (1 << getBit(pin))) ? HIGH : LOW;
 }
 
-uint8_t PCA9505_06::digitalRead(uint8_t p) {	
-	uint8_t command = (PCA9505_IP0 + getPort(p)) | PCA9505_AI_OFF;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	return (Wire.read() & (1 << getBit(p))) ? HIGH : LOW;
-}
-
-uint8_t PCA9505_06::digitalPortRead(uint8_t p) {
-	uint8_t command = (p % 5) | PCA9505_AI_OFF;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	return Wire.read();
+uint8_t PCA9505_06::digitalPortRead(uint8_t port) {
+	retrievePortData(PCA9505_IP, port);
 }
   
-uint64_t PCA9505_06::digitalIORead() {
-	uint8_t command = PCA9505_IP0 | PCA9505_AI_ON;
-	uint64_t result = 0;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 5);
-	result |= Wire.read();
-	result = result << 8;
-	result |= Wire.read();
-	result = result << 8;
-	result |= Wire.read();
-	result = result << 8;
-	result |= Wire.read();
-	result = result << 8;
-	result |= Wire.read();
-	result = result << 8;
-	return result;
+IOPORTS PCA9505_06::digitalIORead() {
+	return retrieveIOData(PCA9505_IP);
 }
 
-void PCA9505_06::setPinInterrupt(uint8_t p) {
-	uint8_t command = (PCA9505_MSK0 + getPort(p)) | PCA9505_AI_OFF;
-	uint8_t set = 0;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 1);
-	set = Wire.read();
-	
-	bitWrite(set, getBit(p), 0);
+void PCA9505_06::setPinInterrupt(uint8_t pin, bool enable = true) {
+	uint8_t set = retrievePortData(PCA9505_MSK, getPort(pin));
+	bitWrite(set, getBit(pin), (enable ? 0 : 1));
+	sendPortData(PCA9505_MSK, getPort(pin), set);
+}
 
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(set);
-	Wire.endTransmission();
+uint8_t PCA9505_06::getPinInterrupt(uint8_t pin) {
+	return (retrievePortData(PCA9505_MSK, getPort(pin)) >> getBit(pin)) & 0x01;
 }
 
 void PCA9505_06::setPortInterrupt(uint8_t port, uint8_t flags) {
-	uint8_t command = (PCA9505_MSK0 + (port % 5)) | PCA9505_AI_OFF;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(flags);
-	Wire.endTransmission();
+	sendPortData(PCA9505_MSK, port, flags);
 }
 
-void PCA9505_06::setIOInterrupt(uint8_t flags0, uint8_t flags1, uint8_t flags2, uint8_t flags3, uint8_t flags4) {
-	uint8_t command = PCA9505_MSK0 | PCA9505_AI_ON;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(flags0);
-	Wire.write(flags1);
-	Wire.write(flags2);
-	Wire.write(flags3);
-	Wire.write(flags4);
-	Wire.endTransmission();
+uint8_t PCA9505_06::getPortInterrupt(uint8_t port) {
+	return retrievePortData(PCA9505_MSK, port);
+}
+
+void PCA9505_06::setIOInterrupt(IOPORTS flags) {
+	sendIOData(PCA9505_MSK, flags);
+}
+
+IOPORTS PCA9505_06::getIOInterrupt() {
+	return retrieveIOData(PCA9505_MSK);
 }
 
 void PCA9505_06::clearInterrupt() {
-	uint8_t command = PCA9505_IP0 | PCA9505_AI_ON;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.endTransmission();
-	
-	Wire.requestFrom(i2caddr, 5);
-	Wire.read();
-	Wire.read();
-	Wire.read();
-	Wire.read();
-	Wire.read();
+	digitalIORead();
 }
 
-void PCA9505_06::setPolarity(uint8_t port, uint8_t flags) {
-	uint8_t command = (PCA9505_PI0 + (port % 5)) | PCA9505_AI_OFF;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(flags);
-	Wire.endTransmission();
+void PCA9505_06::setPinPolarity(uint8_t pin, uint8_t flag) {
+	uint8_t set = retrievePortData(PCA9505_PI, getPort(pin));
+	bitWrite(set, getBit(pin), (flag ? 1 : 0));
+	sendPortData(PCA9505_MSK, getPort(pin), set);
 }
 
-void PCA9505_06::setPolarities(uint8_t flags0, uint8_t flags1, uint8_t flags2, uint8_t flags3, uint8_t flags4) {
-	uint8_t command = PCA9505_PI0 | PCA9505_AI_ON;
-	
-	Wire.beginTransmission(i2caddr);
-	Wire.write(command);
-	Wire.write(flags0);
-	Wire.write(flags1);
-	Wire.write(flags2);
-	Wire.write(flags3);
-	Wire.write(flags4);
-	Wire.endTransmission();
+uint8_t PCA9505_06::getPinPolarity(uint8_t pin) {
+	return (retrievePortData(PCA9505_PI, getPort(pin)) >> getBit(pin)) & 0x01;
+}
+
+void PCA9505_06::setPortPolarity(uint8_t port, uint8_t flags) {
+	sendPortData(PCA9505_MSK, port, flags);
+}
+
+uint8_t PCA9505_06::getPortPolarity(uint8_t port) {
+	return retrievePortData(PCA9505_PI, port);
+}
+
+void PCA9505_06::setIOPolarity(IOPORTS flags) {
+	sendIOData(PCA9505_PI, flags);
+}
+
+IOPORTS PCA9505_06::getIOPolarity() {
+	return retrieveIOData(PCA9505_PI);
 }

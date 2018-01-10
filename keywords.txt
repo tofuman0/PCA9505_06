@@ -6,62 +6,40 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-PCA9505_06			KEYWORD1
+PCA9505_06	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-getPinMode			KEYWORD2
-portMode			KEYWORD2
-getPortMode			KEYWORD2
-ioMode				KEYWORD2
-getIoMode			KEYWORD2
+pinMode	KEYWORD2
+getPinMode	KEYWORD2
+portMode	KEYWORD2
+getPortMode	KEYWORD2
+ioMode	KEYWORD2
+getIoMode	KEYWORD2
+digitalWrite	KEYWORD2
 digitalPortWrite	KEYWORD2
-digitalIOWrite		KEYWORD2
-digitalPortRead		KEYWORD2
-digitalIORead		KEYWORD2
-setPinInterrupt		KEYWORD2
+digitalIOWrite	KEYWORD2
+digitalRead	KEYWORD2
+digitalPortRead	KEYWORD2
+digitalIORead	KEYWORD2
+setPinInterrupt	KEYWORD2
+getPinInterrupt	KEYWORD2
 setPortInterrupt	KEYWORD2
-setIOInterrupt		KEYWORD2
-clearInterrupt		KEYWORD2
-setPolarity			KEYWORD2
-setPolarities		KEYWORD2
-setIOInterrupt		KEYWORD2
-setIOInterrupt		KEYWORD2
+getPortInterrupt	KEYWORD2
+setIOInterrupt	KEYWORD2
+getIOInterrupt	KEYWORD2
+clearInterrupt	KEYWORD2
+setPinPolarity	KEYWORD2
+getPinPolarity	KEYWORD2
+setPortPolarity	KEYWORD2
+getPortPolarity	KEYWORD2
+setIOPolarity	KEYWORD2
+getIOPolarity	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
-PCA9505_AI_ON           LITERAL1
-PCA9505_AI_OFF          LITERAL1
-PCA9505_BASE_ADDRESS    LITERAL1
-PCA9505_A0              LITERAL1
-PCA9505_A1              LITERAL1
-PCA9505_A2              LITERAL1
-PCA9505_IP0             LITERAL1
-PCA9505_IP1             LITERAL1
-PCA9505_IP2             LITERAL1
-PCA9505_IP3             LITERAL1
-PCA9505_IP4             LITERAL1
-PCA9505_OP0             LITERAL1
-PCA9505_OP1             LITERAL1
-PCA9505_OP2             LITERAL1
-PCA9505_OP3             LITERAL1
-PCA9505_OP4             LITERAL1
-PCA9505_PI0             LITERAL1
-PCA9505_PI1             LITERAL1
-PCA9505_PI2             LITERAL1
-PCA9505_PI3             LITERAL1
-PCA9505_PI4             LITERAL1
-PCA9505_IOC0            LITERAL1
-PCA9505_IOC1            LITERAL1
-PCA9505_IOC2            LITERAL1
-PCA9505_IOC3            LITERAL1
-PCA9505_IOC4            LITERAL1
-PCA9505_MSK0            LITERAL1
-PCA9505_MSK1            LITERAL1
-PCA9505_MSK2            LITERAL1
-PCA9505_MSK3            LITERAL1
-PCA9505_MSK4            LITERAL1
+IOPORTS	LITERAL1
