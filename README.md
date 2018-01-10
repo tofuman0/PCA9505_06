@@ -11,7 +11,7 @@ The chip operates between 2.3v and 5.5v. All IO are 5.5v tolerant.
 
 All IO are defaulted as inputs on power on.
 
-Output enable disables outputs on ALL IO configured as outputs and could be used to send s PWM signal
+Output enable disables outputs on ALL IO configured as outputs and could be used to send an PWM signal
 to dim LED's connected to outputs.
 
 Interupt is active LOW when a pin's state has changed.
