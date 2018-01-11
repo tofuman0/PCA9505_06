@@ -30,7 +30,7 @@ public:
   uint8_t digitalPortRead(uint8_t port);
   IOPORTS digitalIORead();
  
-  void setPinInterrupt(uint8_t pin, bool enable = true);
+  void setPinInterrupt(uint8_t pin, bool enable);
   uint8_t getPinInterrupt(uint8_t pin);
   void setPortInterrupt(uint8_t port, uint8_t enable);
   uint8_t getPortInterrupt(uint8_t port);
