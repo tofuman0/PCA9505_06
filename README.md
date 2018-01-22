@@ -15,3 +15,5 @@ Output enable disables outputs on ALL IO configured as outputs and could be used
 to dim LED's connected to outputs.
 
 Interupt is active LOW when a pin's state has changed.
+
+My IO Expander board design is available on EasyEDA here: https://easyeda.com/tofuman/40bit_GPIO_Expander_Board-ca14a80c34f64675b12a7c6f5bcb47ed
