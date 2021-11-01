@@ -166,7 +166,7 @@ uint8_t PCA9505_06::digitalRead(uint8_t pin) {
 }
 
 uint8_t PCA9505_06::digitalPortRead(uint8_t port) {
-	retrievePortData(PCA9505_IP, port);
+	return retrievePortData(PCA9505_IP, port);
 }
   
 IOPORTS PCA9505_06::digitalIORead() {
